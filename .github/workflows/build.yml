@@ -60,16 +60,23 @@ jobs:
         echo "Starting PyInstaller build with detailed output..."
         python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec > build_output.log 2>&1
         type build_output.log
-        if not exist "dist\听泉CursorPro换号工具" (
+        
+        echo "Checking build output directories..."
+        dir dist /s
+        
+        if exist "dist\u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177" (
+          echo "Build output found in Unicode path"
+          cd dist
+          ren "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177" "听泉CursorPro换号工具"
+          cd ..
+        ) else if exist "dist\听泉CursorPro换号工具" (
+          echo "Build output found in UTF-8 path"
+        ) else (
           echo "Build failed - output directory not found"
+          dir dist /s
           exit 1
         )
       shell: cmd
-        
-    - name: Check build output
-      run: |
-        echo "Checking dist directory..."
-        dir dist /s
         
     - name: Create ZIP archive
       shell: cmd
@@ -77,16 +84,11 @@ jobs:
         echo "Creating ZIP archive..."
         cd dist
         dir /s
-        if exist "听泉CursorPro换号工具" (
-          powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
-        ) else (
-          echo "Error: Build output directory not found"
-          exit 1
-        )
+        powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
         cd ..
         if exist "听泉CursorPro换号工具-Windows.zip" (
           echo "ZIP file created successfully"
-          dir 听泉CursorPro换号工具-Windows.zip
+          dir "听泉CursorPro换号工具-Windows.zip"
         ) else (
           echo "Error: ZIP file creation failed"
           exit 1
