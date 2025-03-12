@@ -14,14 +14,13 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # 获取完整的git历史
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -31,37 +30,30 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # 显示Python和pip版本
         python --version
         pip --version
-        # 安装依赖并显示详细信息
         pip install -r requirements.txt -v
         pip install pyinstaller -v
         
     - name: Build Windows
       shell: pwsh
       run: |
-        # 显示当前目录内容
         Get-ChildItem -Recurse
         
-        # 确保spec文件存在
         if (-not (Test-Path "TingQuanChanger.spec")) {
           Write-Error "Spec file not found!"
           exit 1
         }
         
-        # 开始构建
         Write-Host "Starting PyInstaller build..."
         $buildOutput = & python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec *>&1
         $buildOutput | Out-File -FilePath build_output.log -Encoding UTF8
         Get-Content build_output.log
         
-        # 检查构建输出
         Write-Host "Checking build output..."
         Set-Location dist
         Get-ChildItem -Recurse
         
-        # 创建发布目录
         $exeName = "听泉CursorPro换号工具.exe"
         $dirName = "听泉CursorPro换号工具"
         
@@ -72,7 +64,6 @@ jobs:
           Copy-Item -Force ..\README.md $dirName
           Copy-Item -Force ..\requirements.txt $dirName
           
-          # 创建ZIP文件
           Write-Host "Creating ZIP archive..."
           Compress-Archive -Force -Path $dirName -DestinationPath ..\听泉CursorPro换号工具-Windows.zip
           
@@ -102,5 +93,171 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: build-logs
+        name: build-logs-windows
+        path: build_output.log
+
+  build-macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, macos-14]
+        include:
+          - os: macos-latest
+            platform: intel
+            suffix: MacIntel
+          - os: macos-14
+            platform: arm
+            suffix: Mac
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python --version
+        pip --version
+        pip install -r requirements.txt -v
+        pip install pyinstaller -v
+        
+    - name: Build MacOS
+      run: |
+        ls -la
+        
+        if [ ! -f "TingQuanChanger.spec" ]; then
+          echo "Spec file not found!"
+          exit 1
+        fi
+        
+        echo "Starting PyInstaller build..."
+        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec 2>&1 | tee build_output.log
+        
+        echo "Checking build output..."
+        cd dist
+        ls -la
+        
+        APP_NAME="听泉CursorPro换号工具"
+        if [ -f "$APP_NAME" ]; then
+          echo "Build output found: Single file mode"
+          mkdir -p "$APP_NAME"
+          mv "$APP_NAME" "$APP_NAME/"
+          cp ../README.md "$APP_NAME/"
+          cp ../requirements.txt "$APP_NAME/"
+          
+          echo "Creating ZIP archive..."
+          zip -r "../${APP_NAME}-${{ matrix.suffix }}.zip" "$APP_NAME"
+          
+          cd ..
+          if [ -f "${APP_NAME}-${{ matrix.suffix }}.zip" ]; then
+            echo "ZIP file created successfully"
+            ls -l "${APP_NAME}-${{ matrix.suffix }}.zip"
+          else
+            echo "ZIP file creation failed"
+            exit 1
+          fi
+        else
+          echo "Build failed - executable not found"
+          ls -la
+          exit 1
+        fi
+        
+    - name: Upload Build Artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: 听泉CursorPro换号工具-${{ matrix.suffix }}
+        path: 听泉CursorPro换号工具-${{ matrix.suffix }}.zip
+        retention-days: 5
+        
+    - name: Upload Build Logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-${{ matrix.suffix }}
+        path: build_output.log
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python --version
+        pip --version
+        pip install -r requirements.txt -v
+        pip install pyinstaller -v
+        
+    - name: Build Linux
+      run: |
+        ls -la
+        
+        if [ ! -f "TingQuanChanger.spec" ]; then
+          echo "Spec file not found!"
+          exit 1
+        fi
+        
+        echo "Starting PyInstaller build..."
+        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec 2>&1 | tee build_output.log
+        
+        echo "Checking build output..."
+        cd dist
+        ls -la
+        
+        APP_NAME="听泉CursorPro换号工具"
+        if [ -f "$APP_NAME" ]; then
+          echo "Build output found: Single file mode"
+          mkdir -p "$APP_NAME"
+          mv "$APP_NAME" "$APP_NAME/"
+          cp ../README.md "$APP_NAME/"
+          cp ../requirements.txt "$APP_NAME/"
+          
+          echo "Creating ZIP archive..."
+          zip -r "../${APP_NAME}-Linux.zip" "$APP_NAME"
+          
+          cd ..
+          if [ -f "${APP_NAME}-Linux.zip" ]; then
+            echo "ZIP file created successfully"
+            ls -l "${APP_NAME}-Linux.zip"
+          else
+            echo "ZIP file creation failed"
+            exit 1
+          fi
+        else
+          echo "Build failed - executable not found"
+          ls -la
+          exit 1
+        fi
+        
+    - name: Upload Build Artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: 听泉CursorPro换号工具-Linux
+        path: 听泉CursorPro换号工具-Linux.zip
+        retention-days: 5
+        
+    - name: Upload Build Logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-linux
         path: build_output.log 
