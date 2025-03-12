@@ -61,22 +61,29 @@ jobs:
         python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec > build_output.log 2>&1
         type build_output.log
         
-        echo "Checking build output directories..."
+        echo "Checking build output..."
         dir dist /s
         
-        if exist "dist\u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177" (
-          echo "Build output found in Unicode path"
-          cd dist
-          ren "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177" "听泉CursorPro换号工具"
-          cd ..
-        ) else if exist "dist\听泉CursorPro换号工具" (
-          echo "Build output found in UTF-8 path"
+        cd dist
+        if exist "听泉CursorPro换号工具.exe" (
+          echo "Build output found: Single file mode"
+          mkdir "听泉CursorPro换号工具"
+          move "听泉CursorPro换号工具.exe" "听泉CursorPro换号工具\"
+          copy "..\README.md" "听泉CursorPro换号工具\"
+          copy "..\requirements.txt" "听泉CursorPro换号工具\"
+        ) else if exist "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177.exe" (
+          echo "Build output found: Unicode path"
+          mkdir "听泉CursorPro换号工具"
+          move "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177.exe" "听泉CursorPro换号工具\听泉CursorPro换号工具.exe"
+          copy "..\README.md" "听泉CursorPro换号工具\"
+          copy "..\requirements.txt" "听泉CursorPro换号工具\"
         ) else (
-          echo "Build failed - output directory not found"
-          dir dist /s
+          echo "Build failed - executable not found"
+          dir /s
+          cd ..
           exit 1
         )
-      shell: cmd
+        cd ..
         
     - name: Create ZIP archive
       shell: cmd
