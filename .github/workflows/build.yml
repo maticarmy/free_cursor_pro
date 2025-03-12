@@ -13,6 +13,11 @@ permissions:
   checks: write
   packages: write
 
+env:
+  PYTHONIOENCODING: utf-8
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -130,6 +135,10 @@ jobs:
         
     - name: Build MacOS
       run: |
+        export PYTHONIOENCODING=utf-8
+        export LANG=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+        
         ls -la
         
         if [ ! -f "TingQuanChanger.spec" ]; then
@@ -144,21 +153,25 @@ jobs:
         cd dist
         ls -la
         
-        APP_NAME="听泉CursorPro换号工具"
-        if [ -f "$APP_NAME" ]; then
+        # 使用英文名称作为临时名称
+        TEMP_NAME="TingQuanChanger"
+        FINAL_NAME="听泉CursorPro换号工具"
+        
+        if [ -f "$TEMP_NAME" ]; then
           echo "Build output found: Single file mode"
-          mkdir -p "$APP_NAME"
-          mv "$APP_NAME" "$APP_NAME/"
-          cp ../README.md "$APP_NAME/"
-          cp ../requirements.txt "$APP_NAME/"
+          mkdir -p "$TEMP_NAME"
+          mv "$TEMP_NAME" "$TEMP_NAME/"
+          cp ../README.md "$TEMP_NAME/"
+          cp ../requirements.txt "$TEMP_NAME/"
           
           echo "Creating ZIP archive..."
-          zip -r "../${APP_NAME}-${{ matrix.suffix }}.zip" "$APP_NAME"
+          mv "$TEMP_NAME" "$FINAL_NAME"
+          zip -r "../${FINAL_NAME}-${{ matrix.suffix }}.zip" "$FINAL_NAME"
           
           cd ..
-          if [ -f "${APP_NAME}-${{ matrix.suffix }}.zip" ]; then
+          if [ -f "${FINAL_NAME}-${{ matrix.suffix }}.zip" ]; then
             echo "ZIP file created successfully"
-            ls -l "${APP_NAME}-${{ matrix.suffix }}.zip"
+            ls -l "${FINAL_NAME}-${{ matrix.suffix }}.zip"
           else
             echo "ZIP file creation failed"
             exit 1
