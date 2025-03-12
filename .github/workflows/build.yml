@@ -18,7 +18,24 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整的git历史
+    
+    - name: List files after checkout
+      run: |
+        echo "Current directory contents:"
+        dir
+        echo "Checking if spec file exists:"
+        if exist TingQuanChanger.spec (
+          echo "Spec file found"
+          type TingQuanChanger.spec
+        ) else (
+          echo "Spec file not found"
+          exit 1
+        )
+      shell: cmd
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -28,22 +45,54 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller
+        # 显示Python和pip版本
+        python --version
+        pip --version
+        # 安装依赖并显示详细信息
+        pip install -r requirements.txt -v
+        pip install pyinstaller -v
         
     - name: Build Windows
       run: |
-        pyinstaller TingQuanChanger.spec --distpath dist/windows --workpath build/windows --noconfirm
+        # 确保spec文件存在
+        if not exist TingQuanChanger.spec (
+          echo "Error: Spec file not found!"
+          exit 1
+        )
+        # 显示spec文件内容
+        type TingQuanChanger.spec
+        echo "Starting PyInstaller build..."
+        pyinstaller --noconfirm --log-level DEBUG TingQuanChanger.spec
+      shell: cmd
+        
+    - name: Check build output
+      run: |
+        echo "Checking dist directory..."
+        dir dist
         
     - name: Create ZIP archive
       shell: cmd
       run: |
-        cd dist\windows
-        powershell Compress-Archive -Path * -DestinationPath ..\..\听泉CursorPro换号工具-Windows.zip -Force
+        echo "Creating ZIP archive..."
+        cd dist
+        dir
+        powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
+        cd ..
+        dir 听泉CursorPro换号工具-Windows.zip
         
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: 听泉CursorPro换号工具-Windows
         path: 听泉CursorPro换号工具-Windows.zip
-        retention-days: 5 
+        retention-days: 5
+        
+    - name: Upload Build Logs
+      if: always()  # 即使前面的步骤失败也上传日志
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          build/*.log
+          dist/*.log
+          *.log 
