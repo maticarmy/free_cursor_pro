@@ -6,9 +6,16 @@ on:
     tags:
       - 'v*'  # 当推送v开头的tag时触发
 
+# 添加必要的权限
+permissions:
+  contents: write
+  actions: write
+  checks: write
+  packages: write
+
 jobs:
   build:
-    runs-on: windows-latest  # 先只测试Windows版本
+    runs-on: windows-latest
     
     steps:
     - uses: actions/checkout@v4
@@ -29,12 +36,14 @@ jobs:
         pyinstaller TingQuanChanger.spec --distpath dist/windows --workpath build/windows --noconfirm
         
     - name: Create ZIP archive
+      shell: cmd
       run: |
-        cd dist/windows
-        7z a -tzip ../../听泉CursorPro换号工具-Windows.zip *
+        cd dist\windows
+        powershell Compress-Archive -Path * -DestinationPath ..\..\听泉CursorPro换号工具-Windows.zip -Force
         
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
       with:
         name: 听泉CursorPro换号工具-Windows
-        path: 听泉CursorPro换号工具-Windows.zip 
+        path: 听泉CursorPro换号工具-Windows.zip
+        retention-days: 5 
