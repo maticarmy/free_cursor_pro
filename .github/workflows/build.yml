@@ -26,7 +26,7 @@ jobs:
     - name: List files after checkout
       run: |
         echo "Current directory contents:"
-        dir
+        dir /s
         echo "Checking if spec file exists:"
         if exist TingQuanChanger.spec (
           echo "Spec file found"
@@ -54,31 +54,43 @@ jobs:
         
     - name: Build Windows
       run: |
-        # 确保spec文件存在
-        if not exist TingQuanChanger.spec (
-          echo "Error: Spec file not found!"
+        # 确保spec文件存在并显示内容
+        dir
+        type TingQuanChanger.spec
+        echo "Starting PyInstaller build with detailed output..."
+        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec > build_output.log 2>&1
+        type build_output.log
+        if not exist "dist\听泉CursorPro换号工具" (
+          echo "Build failed - output directory not found"
           exit 1
         )
-        # 显示spec文件内容
-        type TingQuanChanger.spec
-        echo "Starting PyInstaller build..."
-        pyinstaller --noconfirm --log-level DEBUG TingQuanChanger.spec
       shell: cmd
         
     - name: Check build output
       run: |
         echo "Checking dist directory..."
-        dir dist
+        dir dist /s
         
     - name: Create ZIP archive
       shell: cmd
       run: |
         echo "Creating ZIP archive..."
         cd dist
-        dir
-        powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
+        dir /s
+        if exist "听泉CursorPro换号工具" (
+          powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
+        ) else (
+          echo "Error: Build output directory not found"
+          exit 1
+        )
         cd ..
-        dir 听泉CursorPro换号工具-Windows.zip
+        if exist "听泉CursorPro换号工具-Windows.zip" (
+          echo "ZIP file created successfully"
+          dir 听泉CursorPro换号工具-Windows.zip
+        ) else (
+          echo "Error: ZIP file creation failed"
+          exit 1
+        )
         
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
@@ -92,7 +104,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-logs
-        path: |
-          build/*.log
-          dist/*.log
-          *.log 
+        path: build_output.log 
