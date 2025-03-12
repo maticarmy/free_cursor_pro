@@ -23,20 +23,6 @@ jobs:
       with:
         fetch-depth: 0  # 获取完整的git历史
     
-    - name: List files after checkout
-      run: |
-        echo "Current directory contents:"
-        dir /s
-        echo "Checking if spec file exists:"
-        if exist TingQuanChanger.spec (
-          echo "Spec file found"
-          type TingQuanChanger.spec
-        ) else (
-          echo "Spec file not found"
-          exit 1
-        )
-      shell: cmd
-    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -53,53 +39,59 @@ jobs:
         pip install pyinstaller -v
         
     - name: Build Windows
+      shell: pwsh
       run: |
-        # 确保spec文件存在并显示内容
-        dir
-        type TingQuanChanger.spec
-        echo "Starting PyInstaller build with detailed output..."
-        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec > build_output.log 2>&1
-        type build_output.log
+        # 显示当前目录内容
+        Get-ChildItem -Recurse
         
-        echo "Checking build output..."
-        dir dist /s
+        # 确保spec文件存在
+        if (-not (Test-Path "TingQuanChanger.spec")) {
+          Write-Error "Spec file not found!"
+          exit 1
+        }
         
-        cd dist
-        powershell -Command {
-          $exeName = "听泉CursorPro换号工具.exe"
-          $dirName = "听泉CursorPro换号工具"
+        # 开始构建
+        Write-Host "Starting PyInstaller build..."
+        $buildOutput = & python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec *>&1
+        $buildOutput | Out-File -FilePath build_output.log -Encoding UTF8
+        Get-Content build_output.log
+        
+        # 检查构建输出
+        Write-Host "Checking build output..."
+        Set-Location dist
+        Get-ChildItem -Recurse
+        
+        # 创建发布目录
+        $exeName = "听泉CursorPro换号工具.exe"
+        $dirName = "听泉CursorPro换号工具"
+        
+        if (Test-Path $exeName) {
+          Write-Host "Build output found: Single file mode"
+          New-Item -ItemType Directory -Force -Path $dirName
+          Move-Item -Force $exeName $dirName
+          Copy-Item -Force ..\README.md $dirName
+          Copy-Item -Force ..\requirements.txt $dirName
           
-          if (Test-Path $exeName) {
-            echo "Build output found: Single file mode"
-            New-Item -ItemType Directory -Path $dirName -Force
-            Move-Item $exeName $dirName -Force
-            Copy-Item ..\README.md $dirName -Force
-            Copy-Item ..\requirements.txt $dirName -Force
+          # 创建ZIP文件
+          Write-Host "Creating ZIP archive..."
+          Compress-Archive -Force -Path $dirName -DestinationPath ..\听泉CursorPro换号工具-Windows.zip
+          
+          Set-Location ..
+          if (Test-Path "听泉CursorPro换号工具-Windows.zip") {
+            Write-Host "ZIP file created successfully"
+            Get-Item "听泉CursorPro换号工具-Windows.zip"
           } else {
-            echo "Build failed - executable not found"
-            Get-ChildItem -Recurse
+            Write-Error "ZIP file creation failed"
             exit 1
           }
-        }
-        cd ..
-        
-    - name: Create ZIP archive
-      shell: powershell
-      run: |
-        echo "Creating ZIP archive..."
-        cd dist
-        Get-ChildItem -Recurse
-        Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force
-        cd ..
-        if (Test-Path "听泉CursorPro换号工具-Windows.zip") {
-          echo "ZIP file created successfully"
-          Get-Item "听泉CursorPro换号工具-Windows.zip"
         } else {
-          echo "Error: ZIP file creation failed"
+          Write-Error "Build failed - executable not found"
+          Get-ChildItem -Recurse
           exit 1
         }
         
     - name: Upload Build Artifact
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: 听泉CursorPro换号工具-Windows
@@ -107,7 +99,7 @@ jobs:
         retention-days: 5
         
     - name: Upload Build Logs
-      if: always()  # 即使前面的步骤失败也上传日志
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: build-logs
