@@ -153,25 +153,37 @@ jobs:
         cd dist
         ls -la
         
-        # 使用英文名称作为临时名称
-        TEMP_NAME="TingQuanChanger"
-        FINAL_NAME="听泉CursorPro换号工具"
+        # 检查是否存在dist目录下的可执行文件
+        if [ -f "tingquan_cursor_pro" ]; then
+          EXEC_NAME="tingquan_cursor_pro"
+        else
+          EXEC_NAME="TingQuanChanger"
+        fi
         
-        if [ -f "$TEMP_NAME" ]; then
-          echo "Build output found: Single file mode"
-          mkdir -p "$TEMP_NAME"
-          mv "$TEMP_NAME" "$TEMP_NAME/"
-          cp ../README.md "$TEMP_NAME/"
-          cp ../requirements.txt "$TEMP_NAME/"
+        if [ -f "$EXEC_NAME" ]; then
+          echo "Build output found: $EXEC_NAME"
           
-          echo "Creating ZIP archive..."
-          mv "$TEMP_NAME" "$FINAL_NAME"
-          zip -r "../${FINAL_NAME}-${{ matrix.suffix }}.zip" "$FINAL_NAME"
+          # 创建发布目录
+          RELEASE_DIR="TingQuanChanger_release"
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR"
+          
+          # 复制文件并重命名
+          cp "$EXEC_NAME" "$RELEASE_DIR/听泉CursorPro换号工具"
+          chmod +x "$RELEASE_DIR/听泉CursorPro换号工具"
+          cp ../README.md "$RELEASE_DIR/"
+          cp ../requirements.txt "$RELEASE_DIR/"
+          
+          # 创建ZIP文件
+          cd ..
+          rm -f "听泉CursorPro换号工具-${{ matrix.suffix }}.zip"
+          cd dist
+          zip -r "../听泉CursorPro换号工具-${{ matrix.suffix }}.zip" "$RELEASE_DIR"/*
           
           cd ..
-          if [ -f "${FINAL_NAME}-${{ matrix.suffix }}.zip" ]; then
+          if [ -f "听泉CursorPro换号工具-${{ matrix.suffix }}.zip" ]; then
             echo "ZIP file created successfully"
-            ls -l "${FINAL_NAME}-${{ matrix.suffix }}.zip"
+            ls -l "听泉CursorPro换号工具-${{ matrix.suffix }}.zip"
           else
             echo "ZIP file creation failed"
             exit 1
@@ -235,21 +247,37 @@ jobs:
         cd dist
         ls -la
         
-        APP_NAME="听泉CursorPro换号工具"
-        if [ -f "$APP_NAME" ]; then
-          echo "Build output found: Single file mode"
-          mkdir -p "$APP_NAME"
-          mv "$APP_NAME" "$APP_NAME/"
-          cp ../README.md "$APP_NAME/"
-          cp ../requirements.txt "$APP_NAME/"
+        # 检查是否存在dist目录下的可执行文件
+        if [ -f "tingquan_cursor_pro" ]; then
+          EXEC_NAME="tingquan_cursor_pro"
+        else
+          EXEC_NAME="TingQuanChanger"
+        fi
+        
+        if [ -f "$EXEC_NAME" ]; then
+          echo "Build output found: $EXEC_NAME"
           
-          echo "Creating ZIP archive..."
-          zip -r "../${APP_NAME}-Linux.zip" "$APP_NAME"
+          # 创建发布目录
+          RELEASE_DIR="TingQuanChanger_release"
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR"
+          
+          # 复制文件并重命名
+          cp "$EXEC_NAME" "$RELEASE_DIR/听泉CursorPro换号工具"
+          chmod +x "$RELEASE_DIR/听泉CursorPro换号工具"
+          cp ../README.md "$RELEASE_DIR/"
+          cp ../requirements.txt "$RELEASE_DIR/"
+          
+          # 创建ZIP文件
+          cd ..
+          rm -f "听泉CursorPro换号工具-Linux.zip"
+          cd dist
+          zip -r "../听泉CursorPro换号工具-Linux.zip" "$RELEASE_DIR"/*
           
           cd ..
-          if [ -f "${APP_NAME}-Linux.zip" ]; then
+          if [ -f "听泉CursorPro换号工具-Linux.zip" ]; then
             echo "ZIP file created successfully"
-            ls -l "${APP_NAME}-Linux.zip"
+            ls -l "听泉CursorPro换号工具-Linux.zip"
           else
             echo "ZIP file creation failed"
             exit 1
