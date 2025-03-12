@@ -37,5 +37,4 @@ logs/
 free_account_cache.json
 identity_key.json
 
-# Build files
-*.spec 
+# Build files 
