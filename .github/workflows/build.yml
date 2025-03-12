@@ -65,41 +65,39 @@ jobs:
         dir dist /s
         
         cd dist
-        if exist "听泉CursorPro换号工具.exe" (
-          echo "Build output found: Single file mode"
-          mkdir "听泉CursorPro换号工具"
-          move "听泉CursorPro换号工具.exe" "听泉CursorPro换号工具\"
-          copy "..\README.md" "听泉CursorPro换号工具\"
-          copy "..\requirements.txt" "听泉CursorPro换号工具\"
-        ) else if exist "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177.exe" (
-          echo "Build output found: Unicode path"
-          mkdir "听泉CursorPro换号工具"
-          move "u542c\u6cc9CursorPro\u6362\u53f7\u5de5\u5177.exe" "听泉CursorPro换号工具\听泉CursorPro换号工具.exe"
-          copy "..\README.md" "听泉CursorPro换号工具\"
-          copy "..\requirements.txt" "听泉CursorPro换号工具\"
-        ) else (
-          echo "Build failed - executable not found"
-          dir /s
-          cd ..
-          exit 1
-        )
+        powershell -Command {
+          $exeName = "听泉CursorPro换号工具.exe"
+          $dirName = "听泉CursorPro换号工具"
+          
+          if (Test-Path $exeName) {
+            echo "Build output found: Single file mode"
+            New-Item -ItemType Directory -Path $dirName -Force
+            Move-Item $exeName $dirName -Force
+            Copy-Item ..\README.md $dirName -Force
+            Copy-Item ..\requirements.txt $dirName -Force
+          } else {
+            echo "Build failed - executable not found"
+            Get-ChildItem -Recurse
+            exit 1
+          }
+        }
         cd ..
         
     - name: Create ZIP archive
-      shell: cmd
+      shell: powershell
       run: |
         echo "Creating ZIP archive..."
         cd dist
-        dir /s
-        powershell Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force -Verbose
+        Get-ChildItem -Recurse
+        Compress-Archive -Path "听泉CursorPro换号工具" -DestinationPath ..\听泉CursorPro换号工具-Windows.zip -Force
         cd ..
-        if exist "听泉CursorPro换号工具-Windows.zip" (
+        if (Test-Path "听泉CursorPro换号工具-Windows.zip") {
           echo "ZIP file created successfully"
-          dir "听泉CursorPro换号工具-Windows.zip"
-        ) else (
+          Get-Item "听泉CursorPro换号工具-Windows.zip"
+        } else {
           echo "Error: ZIP file creation failed"
           exit 1
-        )
+        }
         
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
