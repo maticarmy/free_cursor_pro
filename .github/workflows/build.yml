@@ -1,18 +1,14 @@
-name: Build and Release
+name: Build Test
 
 on:
   push:
+    branches: [ main ]  # 当推送到main分支时触发
     tags:
-      - 'v*' # 当推送v开头的tag时触发，如v1.0.0
+      - 'v*'  # 当推送v开头的tag时触发
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ['3.12']
+    runs-on: windows-latest  # 先只测试Windows版本
     
     steps:
     - uses: actions/checkout@v4
@@ -20,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.12'
         
     - name: Install dependencies
       run: |
@@ -29,48 +25,16 @@ jobs:
         pip install pyinstaller
         
     - name: Build Windows
-      if: matrix.os == 'windows-latest'
       run: |
         pyinstaller TingQuanChanger.spec --distpath dist/windows --workpath build/windows --noconfirm
+        
+    - name: Create ZIP archive
+      run: |
         cd dist/windows
         7z a -tzip ../../听泉CursorPro换号工具-Windows.zip *
         
-    - name: Build macOS
-      if: matrix.os == 'macos-latest'
-      run: |
-        pyinstaller TingQuanChanger.spec --distpath dist/macos --workpath build/macos --noconfirm
-        cd dist/macos
-        zip -r ../../听泉CursorPro换号工具-macOS.zip *
-        
-    - name: Build Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        pyinstaller TingQuanChanger.spec --distpath dist/linux --workpath build/linux --noconfirm
-        cd dist/linux
-        zip -r ../../听泉CursorPro换号工具-Linux.zip *
-        
-    - name: Upload artifacts
+    - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: 听泉CursorPro换号工具-${{ matrix.os }}
-        path: 听泉CursorPro换号工具-*.zip
-        
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download all artifacts
-      uses: actions/download-artifact@v3
-      
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          */听泉CursorPro换号工具-*.zip
-        draft: false
-        prerelease: false
-        generate_release_notes: true 
+        name: 听泉CursorPro换号工具-Windows
+        path: 听泉CursorPro换号工具-Windows.zip 
