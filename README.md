@@ -20,8 +20,20 @@ pip install -r requirements.txt
 ```
 
 ### 运行方法
+
+⚠️ **重要提示：Windows系统需要以管理员身份运行程序！**
+
+#### Windows用户
+右键点击程序，选择"以管理员身份运行"，或者：
 ```bash
+# 以管理员身份打开PowerShell或命令提示符，然后运行：
 python tingquan_cursor_pro.py
+```
+
+#### 其他系统用户
+```bash
+# Linux/macOS用户使用sudo运行：
+sudo python tingquan_cursor_pro.py
 ```
 
 ## 构建方法
