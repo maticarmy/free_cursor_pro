@@ -160,18 +160,15 @@ jobs:
         echo "Files in dist directory:"
         ls -la
         
-        # 查找生成的可执行文件
-        echo "Searching for executable..."
-        find . -type f -executable
-        
         # 检查是否存在dist目录下的可执行文件
         EXEC_NAME=""
-        for name in "tingquan_cursor_pro" "TingQuanChanger" "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"; do
-          if [ -f "$name" ]; then
-            EXEC_NAME="$name"
-            break
-          fi
-        done
+        if [ -f "tingquan_cursor_pro" ]; then
+          EXEC_NAME="tingquan_cursor_pro"
+        elif [ -f "TingQuanChanger" ]; then
+          EXEC_NAME="TingQuanChanger"
+        elif [ -f "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro" ]; then
+          EXEC_NAME="tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"
+        fi
         
         if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
@@ -271,18 +268,13 @@ jobs:
         echo "Files in dist directory:"
         ls -la
         
-        # 查找生成的可执行文件
-        echo "Searching for executable..."
-        find . -type f -executable
-        
         # 检查是否存在dist目录下的可执行文件
         EXEC_NAME=""
-        for name in "tingquan_cursor_pro" "TingQuanChanger" "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"; do
-          if [ -f "$name" ]; then
-            EXEC_NAME="$name"
-            break
-          fi
-        done
+        if [ -f "tingquan_cursor_pro" ]; then
+          EXEC_NAME="tingquan_cursor_pro"
+        elif [ -f "TingQuanChanger" ]; then
+          EXEC_NAME="TingQuanChanger"
+        fi
         
         if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
