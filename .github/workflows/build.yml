@@ -157,7 +157,7 @@ jobs:
         
         echo "Checking build output..."
         cd dist
-        echo "Files in dist directory:"
+        echo "Files in dist directory:"  # 输出dist目录内容
         ls -la
         
         # 检查是否存在dist目录下的可执行文件
@@ -200,9 +200,9 @@ jobs:
           fi
         else
           echo "Build failed - executable not found"
-          echo "Contents of dist directory:"
+          echo "Contents of dist directory:"  # 输出dist目录内容
           ls -la
-          echo "Contents of build directory:"
+          echo "Contents of build directory:"  # 输出build目录内容
           cd ../build
           ls -la
           exit 1
@@ -327,4 +327,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-logs-linux
-        path: build_output.log 
+        path: build_output.log
