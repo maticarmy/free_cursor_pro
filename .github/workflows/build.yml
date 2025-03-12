@@ -139,6 +139,8 @@ jobs:
         export LANG=en_US.UTF-8
         export LC_ALL=en_US.UTF-8
         
+        # 显示当前目录结构
+        echo "Current directory structure:"
         ls -la
         
         if [ ! -f "TingQuanChanger.spec" ]; then
@@ -146,21 +148,32 @@ jobs:
           exit 1
         fi
         
+        # 显示spec文件内容
+        echo "Spec file contents:"
+        cat TingQuanChanger.spec
+        
         echo "Starting PyInstaller build..."
-        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec 2>&1 | tee build_output.log
+        python -m PyInstaller TingQuanChanger.spec --clean --noconfirm --log-level DEBUG 2>&1 | tee build_output.log
         
         echo "Checking build output..."
         cd dist
+        echo "Files in dist directory:"
         ls -la
         
-        # 检查是否存在dist目录下的可执行文件
-        if [ -f "tingquan_cursor_pro" ]; then
-          EXEC_NAME="tingquan_cursor_pro"
-        else
-          EXEC_NAME="TingQuanChanger"
-        fi
+        # 查找生成的可执行文件
+        echo "Searching for executable..."
+        find . -type f -executable
         
-        if [ -f "$EXEC_NAME" ]; then
+        # 检查是否存在dist目录下的可执行文件
+        EXEC_NAME=""
+        for name in "tingquan_cursor_pro" "TingQuanChanger" "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"; do
+          if [ -f "$name" ]; then
+            EXEC_NAME="$name"
+            break
+          fi
+        done
+        
+        if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
           
           # 创建发布目录
@@ -190,6 +203,10 @@ jobs:
           fi
         else
           echo "Build failed - executable not found"
+          echo "Contents of dist directory:"
+          ls -la
+          echo "Contents of build directory:"
+          cd ../build
           ls -la
           exit 1
         fi
@@ -233,6 +250,8 @@ jobs:
         
     - name: Build Linux
       run: |
+        # 显示当前目录结构
+        echo "Current directory structure:"
         ls -la
         
         if [ ! -f "TingQuanChanger.spec" ]; then
@@ -240,21 +259,32 @@ jobs:
           exit 1
         fi
         
+        # 显示spec文件内容
+        echo "Spec file contents:"
+        cat TingQuanChanger.spec
+        
         echo "Starting PyInstaller build..."
-        python -m PyInstaller --noconfirm --log-level DEBUG TingQuanChanger.spec 2>&1 | tee build_output.log
+        python -m PyInstaller TingQuanChanger.spec --clean --noconfirm --log-level DEBUG 2>&1 | tee build_output.log
         
         echo "Checking build output..."
         cd dist
+        echo "Files in dist directory:"
         ls -la
         
-        # 检查是否存在dist目录下的可执行文件
-        if [ -f "tingquan_cursor_pro" ]; then
-          EXEC_NAME="tingquan_cursor_pro"
-        else
-          EXEC_NAME="TingQuanChanger"
-        fi
+        # 查找生成的可执行文件
+        echo "Searching for executable..."
+        find . -type f -executable
         
-        if [ -f "$EXEC_NAME" ]; then
+        # 检查是否存在dist目录下的可执行文件
+        EXEC_NAME=""
+        for name in "tingquan_cursor_pro" "TingQuanChanger" "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"; do
+          if [ -f "$name" ]; then
+            EXEC_NAME="$name"
+            break
+          fi
+        done
+        
+        if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
           
           # 创建发布目录
@@ -284,6 +314,10 @@ jobs:
           fi
         else
           echo "Build failed - executable not found"
+          echo "Contents of dist directory:"
+          ls -la
+          echo "Contents of build directory:"
+          cd ../build
           ls -la
           exit 1
         fi
