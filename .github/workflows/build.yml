@@ -163,8 +163,8 @@ jobs:
         
         # 检查是否存在dist目录下的任何可执行文件
         EXEC_NAME=""
-        # 尝试查找所有可能的可执行文件名称（包括中文名称和ASCII名称）
-        find . -type f -perm -u+x | while read file; do
+        # 使用for循环代替pipe+while，避免子shell问题
+        for file in $(find . -type f -perm -u+x | grep -v "\.app"); do
           echo "Found executable: $file"
           EXEC_NAME="$file"
           break
@@ -172,17 +172,21 @@ jobs:
         
         # 如果还没找到，尝试查找.app包中的可执行文件
         if [ -z "$EXEC_NAME" ]; then
-          find . -name "*.app" -type d | while read app; do
+          for app in $(find . -name "*.app" -type d); do
             if [ -f "$app/Contents/MacOS/"* ]; then
-              EXEC_NAME=$(find "$app/Contents/MacOS/" -type f -perm -u+x | head -1)
-              echo "Found app executable: $EXEC_NAME"
-              break
+              EXEC_NAME=$(ls -1 "$app/Contents/MacOS/" | head -1)
+              if [ ! -z "$EXEC_NAME" ]; then
+                EXEC_NAME="$app/Contents/MacOS/$EXEC_NAME"
+                echo "Found app executable: $EXEC_NAME"
+                break
+              fi
             fi
           done
         fi
         
         if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
+          echo "Value of EXEC_NAME: '$EXEC_NAME'"
           
           # 创建发布目录
           RELEASE_DIR="TingQuanChanger_release"
@@ -211,6 +215,7 @@ jobs:
           fi
         else
           echo "Build failed - executable not found"
+          echo "EXEC_NAME is empty or not set"
           echo "Contents of dist directory:"  # 输出dist目录内容
           ls -la
           echo "Contents of build directory:"  # 输出build目录内容
@@ -282,8 +287,8 @@ jobs:
         
         # 检查是否存在dist目录下的任何可执行文件
         EXEC_NAME=""
-        # 尝试查找所有可能的可执行文件名称（包括中文名称和ASCII名称）
-        find . -type f -perm -u+x | while read file; do
+        # 使用for循环代替pipe+while，避免子shell问题
+        for file in $(find . -type f -perm -u+x); do
           echo "Found executable: $file"
           EXEC_NAME="$file"
           break
@@ -291,6 +296,7 @@ jobs:
         
         if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"
+          echo "Value of EXEC_NAME: '$EXEC_NAME'"
           
           # 创建发布目录
           RELEASE_DIR="TingQuanChanger_release"
@@ -319,7 +325,8 @@ jobs:
           fi
         else
           echo "Build failed - executable not found"
-          echo "Contents of dist directory:"
+          echo "EXEC_NAME is empty or not set"
+          echo "Contents of dist directory:"  # 输出dist目录内容
           ls -la
           echo "Contents of build directory:"
           cd ../build
