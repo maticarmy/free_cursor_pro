@@ -159,15 +159,26 @@ jobs:
         cd dist
         echo "Files in dist directory:"  # 输出dist目录内容
         ls -la
+        find . -type f -exec file {} \; # 显示所有文件的类型信息
         
-        # 检查是否存在dist目录下的可执行文件
+        # 检查是否存在dist目录下的任何可执行文件
         EXEC_NAME=""
-        if [ -f "tingquan_cursor_pro" ]; then
-          EXEC_NAME="tingquan_cursor_pro"
-        elif [ -f "TingQuanChanger" ]; then
-          EXEC_NAME="TingQuanChanger"
-        elif [ -f "tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro" ]; then
-          EXEC_NAME="tingquan_cursor_pro.app/Contents/MacOS/tingquan_cursor_pro"
+        # 尝试查找所有可能的可执行文件名称（包括中文名称和ASCII名称）
+        find . -type f -perm -u+x | while read file; do
+          echo "Found executable: $file"
+          EXEC_NAME="$file"
+          break
+        done
+        
+        # 如果还没找到，尝试查找.app包中的可执行文件
+        if [ -z "$EXEC_NAME" ]; then
+          find . -name "*.app" -type d | while read app; do
+            if [ -f "$app/Contents/MacOS/"* ]; then
+              EXEC_NAME=$(find "$app/Contents/MacOS/" -type f -perm -u+x | head -1)
+              echo "Found app executable: $EXEC_NAME"
+              break
+            fi
+          done
         fi
         
         if [ ! -z "$EXEC_NAME" ]; then
@@ -267,14 +278,16 @@ jobs:
         cd dist
         echo "Files in dist directory:"
         ls -la
+        find . -type f -exec file {} \; # 显示所有文件的类型信息
         
-        # 检查是否存在dist目录下的可执行文件
+        # 检查是否存在dist目录下的任何可执行文件
         EXEC_NAME=""
-        if [ -f "tingquan_cursor_pro" ]; then
-          EXEC_NAME="tingquan_cursor_pro"
-        elif [ -f "TingQuanChanger" ]; then
-          EXEC_NAME="TingQuanChanger"
-        fi
+        # 尝试查找所有可能的可执行文件名称（包括中文名称和ASCII名称）
+        find . -type f -perm -u+x | while read file; do
+          echo "Found executable: $file"
+          EXEC_NAME="$file"
+          break
+        done
         
         if [ ! -z "$EXEC_NAME" ]; then
           echo "Build output found: $EXEC_NAME"

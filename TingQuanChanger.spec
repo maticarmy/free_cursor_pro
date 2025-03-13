@@ -78,7 +78,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='听泉CursorPro换号工具',  # 程序名称：听泉CursorPro换号工具
+    name='TingQuanChanger' if sys.platform != 'win32' else '听泉CursorPro换号工具',  # 非Windows平台使用ASCII名称
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
