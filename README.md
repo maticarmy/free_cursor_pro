@@ -1,3 +1,20 @@
+# 🚀 Free Cursor Pro Daily Access Tool | 每日Cursor专业版免费助手
+
+这个项目为开发者提供了一个便捷工具，帮助学习者每天免费体验 Cursor Pro 的全部功能。通过简单配置，开发者可以在学习过程中享受 Cursor 专业版带来的 AI 编程助手、代码智能补全、先进重构工具等高级功能，无需支付订阅费用。
+
+仅用于学习和研究，助力编程学习，提升开发效率！
+
+This project provides developers with a convenient tool to experience all Cursor Pro features daily for free. With simple configuration, developers can enjoy Cursor's professional AI programming assistant, intelligent code completion, advanced refactoring tools, and other premium features during their learning journey, without subscription fees.
+
+For educational and research purposes only!
+
+## ✨ 主要特点 | Key Features
+
+- ✅ 每日自动更新 Cursor Pro 访问凭证 | Daily automatic token updates
+- ✅ 一键配置，简单易用 | One-click setup, user-friendly
+- ✅ 完全开源，安全可靠 | Fully open source, secure and reliable
+- ✅ 支持多平台：Windows, macOS, Linux | Cross-platform support
+
 # 听泉CursorPro换号工具
 
 这是一个帮助开发者管理Cursor Pro账号的工具，支持每日免费使用和身份密钥验证模式。
