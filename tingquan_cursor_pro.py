@@ -330,7 +330,18 @@ def get_account_from_api(identity_key):
             try:
                 result = response.json()
                 if result.get("code") != 0:
-                    logging.error(f"{EMOJI['ERROR']} {result.get('msg', 'API返回错误')}")
+                    error_msg = result.get('msg', 'API返回错误')
+                    
+                    # 检查是否包含特殊错误信息
+                    if "过期" in error_msg or "无效" in error_msg or "不存在" in error_msg:
+                        logging.error(f"{EMOJI['ERROR']} {format_error('身份密钥无效')}")
+                        logging.error("=" * 50)
+                        logging.error(f"{format_highlight('🔑 ' + error_msg)}")
+                        logging.error(f"{format_info('请检查您的身份密钥是否正确，或者联系服务提供商')}")
+                        logging.error("=" * 50)
+                    else:
+                        logging.error(f"{EMOJI['ERROR']} {format_error(error_msg)}")
+                    
                     return None
                 
                 account_info = result.get("data")
@@ -440,7 +451,6 @@ def get_free_account():
             ip_address = get_ip_address()
             machine_info = get_hardware_machine_id()
             machine_id = machine_info["id"]
-            saved_key = load_identity_key()
             location = get_approximate_location()
         
         # 构建请求数据
@@ -448,10 +458,6 @@ def get_free_account():
             'ip': ip_address,
             'machine_id': machine_id
         }
-        
-        # 添加可选参数
-        if saved_key:
-            data['identity_key'] = saved_key
         
         if location:
             data['location'] = json.dumps(location)
@@ -471,7 +477,55 @@ def get_free_account():
             try:
                 result = response.json()
                 if result.get("code") != 0:
-                    logging.error(f"{EMOJI['ERROR']} {result.get('msg', '免费API返回错误')}")
+                    error_msg = result.get('msg', '免费API返回错误')
+                    
+                    # 检查是否包含冷却时间信息
+                    if "冷却中" in error_msg or "秒后" in error_msg:
+                        # 尝试提取等待时间
+                        wait_time = None
+                        import re
+                        time_match = re.search(r'(\d+)秒', error_msg)
+                        if time_match:
+                            wait_time = int(time_match.group(1))
+                        
+                        # 打印更明显的等待信息
+                        logging.error(f"{EMOJI['ERROR']} {format_error('免费API使用受限')}")
+                        logging.error("=" * 50)
+                        logging.error(f"{format_highlight('⏱️ ' + error_msg)}")
+                        
+                        if wait_time:
+                            minutes, seconds = divmod(wait_time, 60)
+                            if minutes > 0:
+                                time_str = f"{minutes}分{seconds}秒"
+                            else:
+                                time_str = f"{seconds}秒"
+                            logging.error(f"{format_warning('需要等待：')} {format_highlight(time_str)}")
+                            logging.error(f"{format_info('您可以尝试使用付费账号池，无需等待')}")
+                        
+                        logging.error("=" * 50)
+                        
+                        # 提供等待选项
+                        if wait_time and wait_time < 300:  # 如果等待时间小于5分钟
+                            wait_option = input(f"{format_info('是否等待冷却时间结束? (y/N):')} ").strip().lower()
+                            if wait_option == 'y':
+                                logging.info(f"{EMOJI['INFO']} {format_info('开始等待冷却时间...')}")
+                                
+                                # 简单倒计时显示
+                                for i in range(wait_time, 0, -1):
+                                    mins, secs = divmod(i, 60)
+                                    timer = f"{mins:02d}:{secs:02d}" if mins > 0 else f"{secs} 秒"
+                                    sys.stdout.write(f"\r{format_highlight('⏱️ 剩余时间: ' + timer)}     ")
+                                    sys.stdout.flush()
+                                    time.sleep(1)
+                                
+                                sys.stdout.write("\r" + " " * 50 + "\r")  # 清除倒计时行
+                                logging.info(f"{EMOJI['SUCCESS']} {format_success('冷却时间已结束，正在重新请求...')}")
+                                
+                                # 重新发送请求
+                                return get_free_account()  # 递归调用自身重试
+                    else:
+                        logging.error(f"{EMOJI['ERROR']} {format_error(error_msg)}")
+                    
                     return None
                 
                 account_info = result.get("data")
@@ -649,19 +703,29 @@ def main():
         if account_info:
             # 打印账号信息
             print_account_info(account_info)
-            # 关闭编辑器
-            exit_cursor.ExitCursor()
-
+            
             # 更新Cursor认证信息
             if update_cursor_auth(account_info):
-                # 重置机器码
-                logging.info(f"{EMOJI['INFO']} {format_info('开始重置机器码...')}")
-                reset_machine_id(greater_than_0_45)
-                logging.info(f"{EMOJI['SUCCESS']} {format_success('机器码重置完成')}")
-            
-            # 打印结束信息
-            print_end_message()
-            break  # 完成所有操作，退出循环
+                # 关闭编辑器
+                logging.info(f"{EMOJI['INFO']} {format_info('正在关闭Cursor编辑器...')}")
+                cursor_closed = exit_cursor.ExitCursor()
+                
+                if cursor_closed:
+                    # 重置机器码
+                    logging.info(f"{EMOJI['INFO']} {format_info('开始重置机器码...')}")
+                    reset_machine_id(greater_than_0_45)
+                    logging.info(f"{EMOJI['SUCCESS']} {format_success('机器码重置完成')}")
+                
+                # 打印结束信息
+                print_end_message()
+                break  # 完成所有操作，退出循环
+            else:
+                logging.error(f"{EMOJI['ERROR']} {format_error('认证信息更新失败')}")
+                retry_input = input(f"{format_info('是否重新选择模式? (Y/n):')} ").strip().lower()
+                if retry_input == 'n':
+                    logging.error(f"{EMOJI['ERROR']} {format_error('程序将退出')}")
+                    return
+                continue  # 返回选择模式
         else:
             logging.error(f"{EMOJI['ERROR']} {format_error('无法获取账号信息')}")
             retry_input = input(f"{format_info('是否重新选择模式? (Y/n):')} ").strip().lower()
